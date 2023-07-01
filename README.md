@@ -9,4 +9,4 @@
 
 # requirements
 Для встановлення гри потрібно встановити Python, та виконати такий скрипт в cmd (Win + R, cmd) ↓
-`pip install -r requirements.txt`
+```pip install -r requirements.txt```
