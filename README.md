@@ -8,6 +8,9 @@
 ![изображение](https://github.com/makarasty/PutlerKiller-II/assets/71918286/e73e2d32-98fe-4d83-8863-dc9c36aab00a)
 
 # requirements
-Для встановлення гри потрібно встановити Python, та виконати такий скрипт в cmd (Win + R, cmd) ↓
-
+Для встановлення гри потрібно:
+- Встановити [Python](https://www.python.org/downloads/),
+- Виконати команду в cmd (Win + R, cmd) ↓
 ```pip install -r requirements.txt```
+- Запустити гру за допомогою команди в cmd (Win + R, cmd) ↓
+```python main.py```
