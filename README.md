@@ -1,5 +1,5 @@
 # PutlerKiller-II
-Декілька скриншнотів з гри!
+Декілька скриншнотів з гри:
 
 ![изображение](https://github.com/makarasty/PutlerKiller-II/assets/71918286/dec573b5-c666-4833-a11a-54d5a9f5262b)
 
