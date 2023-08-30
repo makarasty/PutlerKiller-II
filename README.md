@@ -10,7 +10,5 @@
 # requirements
 Для встановлення гри потрібно:
 - Встановити [Python](https://www.python.org/downloads/),
-- Виконати команду в cmd (Win + R, cmd) ↓
-```pip install -r requirements.txt```
-- Запустити гру за допомогою команди в cmd (Win + R, cmd) ↓
-```python main.py```
+- Виконати команду в cmd (Win + R, cmd) → ```pip install -r requirements.txt```
+- Запустити гру за допомогою команди в cmd (Win + R, cmd) → ```python main.py```
