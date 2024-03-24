@@ -10,5 +10,7 @@
 # requirements
 Для встановлення гри потрібно:
 - Встановити [Python](https://www.python.org/downloads/),
-- Виконати команду в cmd (Win + R, cmd) → ```pip install -r requirements.txt```
-- Запустити гру за допомогою команди в cmd (Win + R, cmd) → ```python main.py```
+- `git clone https://github.com/makarasty/PutlerKiller-II`
+- `cd PutlerKiller-II`
+- `pip install -r requirements.txt`
+- `python main.py`
