@@ -9,103 +9,99 @@
 # ! Гру створив MaKarastY
 #
 
-import pygame  # ? головна бібліотека
-# ? функції які безліч разів використовуються в коді, закинув іх в інший файл щоб скоротити синтаксис
+import pygame
 import налаштування as дата
-
 from random import randint, choice
-# ? randint Випадкова цифра віт - до
-# ? choice Виберає випадковий елемент із не порожньої послідовності.
-
 from os import listdir
-# ? listdir все що знаходиться в папці
 from os.path import isfile, join
-# ? isfile перевіряє файл
-# ? join з'єднує елементи
 
 
 class путлер(pygame.sprite.Sprite):
-    # ? Конструктор
     Вибрана_позиція = 'ліво'
     швидкість = 0
     Спрайт_розмір = 200
 
     def __init__(self):
-        # ? дає сигнал для конструктору батьківського класу (Sprite)
-        pygame.sprite.Sprite.__init__(self)
-        # ? ініціалізувати картинку в Pygame
-        self.image = pygame.image.load(join(
-            дата.папка_з_датою, f'картинки/ворог/putlers/putler-{choice(range(4))}.png'))
-        self.rect = self.image.get_rect()                   # ? дізнатись інформацію
-        self.швидкість = 4 + дата.рівень                    # ? швидкість спрайта
-        self.mask = pygame.mask.from_surface(
-            self.image)    # ? маска для картики
-        # ! Ворог з’явитися в 4 різних місцях на екрані і почине рухатися в 4 різних можливих місця
-        self.Вибрана_позиція = choice(
-            ('ліво', 'право', 'верх', 'низ'))  # ? випадкова позиція
+        super().__init__()
+        # ? завантажуємо випадковий спрайт «путлера»
+        self.image = pygame.image.load(
+            join(дата.папка_з_датою, f'картинки/ворог/putlers/putler-{choice(range(4))}.png')
+        )
+        self.rect = self.image.get_rect()
+        self.швидкість = 4 + дата.рівень
+        self.mask = pygame.mask.from_surface(self.image)
 
-        # * визначає центр спрайта
+        # ? Випадкова позиція появи (з 4 сторін)
+        self.Вибрана_позиція = choice(('ліво', 'право', 'верх', 'низ'))
+
+        # * Визначаємо центр спрайта (важливо int(...), щоб randint працював)
         if self.Вибрана_позиція == 'ліво':
-            self.rect.center = (0, randint(
-                self.Спрайт_розмір/2, дата.Гра_висота - self.Спрайт_розмір/2))
+            self.rect.center = (
+                0,
+                randint(self.Спрайт_розмір // 2, дата.Гра_висота - self.Спрайт_розмір // 2)
+            )
         elif self.Вибрана_позиція == 'право':
-            self.rect.center = (дата.Гра_ширина, randint(
-                self.Спрайт_розмір/2,  дата.Гра_висота - self.Спрайт_розмір/2))
+            self.rect.center = (
+                дата.Гра_ширина,
+                randint(self.Спрайт_розмір // 2, дата.Гра_висота - self.Спрайт_розмір // 2)
+            )
         elif self.Вибрана_позиція == 'верх':
             self.rect.center = (
-                randint(self.Спрайт_розмір/2, дата.Гра_ширина - self.Спрайт_розмір/2), 0)
-        else:
-            self.rect.center = (randint(
-                self.Спрайт_розмір/2, дата.Гра_ширина - self.Спрайт_розмір/2), дата.Гра_висота)
+                randint(self.Спрайт_розмір // 2, дата.Гра_ширина - self.Спрайт_розмір // 2),
+                0
+            )
+        else:  # 'низ'
+            self.rect.center = (
+                randint(self.Спрайт_розмір // 2, дата.Гра_ширина - self.Спрайт_розмір // 2),
+                дата.Гра_висота
+            )
 
     def update(self):
-        # ? робимо фон від еффекту пострілу порожнім \ ніяким
+        # ? робимо колір (0,0,0) прозорим
         self.image.set_colorkey((0, 0, 0))
-        # * направляє спрайт в певну сторону зі швидкостю
+
+        # ? Рух відповідно до вибраної позиції
         if self.Вибрана_позиція == 'ліво':
             self.rect.x += self.швидкість
         elif self.Вибрана_позиція == 'право':
             self.rect.x -= self.швидкість
         elif self.Вибрана_позиція == 'верх':
             self.rect.y += self.швидкість
-        else:
+        else:  # 'низ'
             self.rect.y -= self.швидкість
 
 
 class вибух(pygame.sprite.Sprite):
-    # ? Конструктор
     def __init__(self):
-        # ? дає сигнал для конструктору батьківського класу (Sprite)
-        pygame.sprite.Sprite.__init__(self)
-        self.i = 0  # ? лічильник
-        self.index = 0  # ? ініціалізувати індекс
-
-        папка_з_кадрами = "_/картинки/ворог/вибух/"  # ? розташування папки з кадрами
+        super().__init__()
+        self.i = 0
+        self.index = 0
+        папка_з_кадрами = "_/картинки/ворог/вибух/"
         кадри = [
-            # ? створюємо масив зі всіми кадрами в папці
-            ф for ф in listdir(папка_з_кадрами) if isfile(join(папка_з_кадрами, ф))
+            ф for ф in listdir(папка_з_кадрами)
+            if isfile(join(папка_з_кадрами, ф))
         ]
 
         self.images = []
-        # ? ініціалізувати список кадрів в Pygame
         for frame in кадри:
-            self.images.append(pygame.image.load(папка_з_кадрами + frame))
+            self.images.append(pygame.image.load(join(папка_з_кадрами, frame)))
 
-        # ? вибираємо кадр з масиву по індексу
         self.image = self.images[self.index]
-        self.rect = self.image.get_rect()   # ? дізнатись інформацію
+        self.rect = self.image.get_rect()
 
-        mousePos = pygame.mouse.get_pos()  # ? беремо позицію миши користувача (x, y)
+        mousePos = pygame.mouse.get_pos()
         self.rect.x = mousePos[0] - 90
         self.rect.y = mousePos[1] - 115
 
     def update(self):
-        # ? Анімувати і вбити після анімації
+        # ? Якщо анімація «вибуху» дійшла до кінця – видаляємо спрайт
         if self.index >= len(self.images):
             self.kill()
         else:
             self.image = self.images[self.index]
 
-        if self.i % 2 == 0:     # ? Це сповільнить анімацію
-            self.index += 1     # ? збільшуєм індекс на 1
-        self.i += 1             # ? i += 1
+        # ? Невелике «сповільнення» анімації
+        if self.i % 2 == 0:
+            self.index += 1
+
+        self.i += 1
