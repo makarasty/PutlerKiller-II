@@ -9,7 +9,7 @@
 
 # requirements
 Для встановлення гри потрібно:
-- Встановити [git]([https://www.python.org/downloads/](https://git-scm.com/downloads)),
+- Встановити [git](https://git-scm.com/downloads),
 - Встановити [Python](https://www.python.org/downloads/),
 - `git clone https://github.com/makarasty/PutlerKiller-II`
 - `cd PutlerKiller-II`
