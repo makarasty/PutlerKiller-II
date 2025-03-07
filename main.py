@@ -403,4 +403,3 @@ while гра_робить:
         pygame.display.update()
 
 pygame.quit()
-quit()
