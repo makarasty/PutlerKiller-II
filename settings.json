@@ -1,9 +1,0 @@
-{
-    "game_volume": 0.5,
-    "music_volume": 0.01,
-    "mouse_sens": 1.0,
-    "fullscreen": false,
-    "fps_limit": 144,
-    "screen_width": 1920,
-    "screen_height": 1080
-}

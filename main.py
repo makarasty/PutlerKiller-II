@@ -1,14 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import pygame
 import налаштування as дата
+from os.path import join, isfile
+from os import listdir
+from random import randint, choice
+from time import time
+from ctypes import windll
+import os
 
+# Імпортуємо модулі з папки src
 from src import функції
 from src import ворог
 from src import зброя
-
-from random import choice
-from os import listdir
-from os.path import isfile, join
-from time import time
 
 pygame.init()
 pygame.font.init()
@@ -17,18 +22,38 @@ pygame.font.init()
 шрифт_м = pygame.font.Font(join(дата.папка_з_датою, 'LeelawUI.ttf'), 16)
 шрифт_в = pygame.font.Font(join(дата.папка_з_датою, 'LeelawUI.ttf'), 30)
 
-# Глобальна змінна для екрану
-Гра = None
+# Глобальні змінні для дисплею та віртуальної поверхні
+Гра = None          # Фактична поверхня (display surface)
+game_surface = None  # Віртуальна поверхня з дизайнерською роздільною здатністю (наприклад, 1920×1080)
 
-def set_display_mode():
-    """Встановлює режим відображення згідно з налаштуваннями."""
-    global Гра
-    flags = pygame.FULLSCREEN if дата.fullscreen else 0
-    Гра = pygame.display.set_mode((дата.Гра_ширина, дата.Гра_висота), flags)
+def set_display_mode(new_size=None):
+    """
+    Встановлює режим відображення згідно з налаштуваннями.
+    Якщо увімкнено fullscreen – використовується повноекранний режим.
+    Якщо ні – використовується звичайний віконний режим з рамками та з підтримкою зміни розміру.
+    Якщо new_size задано (під час обробки VIDEORESIZE), використовується воно як розмір вікна.
+    """
+    global Гра, game_surface
+    if дата.fullscreen:
+        flags = pygame.FULLSCREEN
+        window_width = дата.Гра_ширина
+        window_height = дата.Гра_висота
+    else:
+        flags = pygame.RESIZABLE  # вікно можна змінювати за допомогою курсору
+        if new_size:
+            window_width, window_height = new_size
+        else:
+            # Використовуємо розміри, задані у налаштуваннях
+            window_width = дата.Гра_ширина
+            window_height = дата.Гра_висота
+        os.environ['SDL_VIDEO_CENTERED'] = '1'
+    Гра = pygame.display.set_mode((window_width, window_height), flags)
     pygame.display.set_caption("Putler killer II")
+    # Віртуальна поверхня залишається з розмірами, заданими у налаштуваннях
+    game_surface = pygame.Surface((дата.Гра_ширина, дата.Гра_висота))
     return Гра
 
-# Ініціалізація дисплея:
+# Ініціалізація дисплею
 Гра = set_display_mode()
 
 # --- Створення спрайтів ---
@@ -62,10 +87,10 @@ def set_display_mode():
 pygame.mixer.music.set_volume(дата.music_volume)
 фонова_музика.play(-1)
 
-# --- Генерація зірок ---
+# --- Генерація зірок (фонова анімація) ---
 функції.Генерація_зірок()
 
-# --- Стан гри ---
+# --- Стан гри та інші змінні ---
 Постріл = None
 гра_робить = True
 назва_кімнати = 'меню'
@@ -126,6 +151,7 @@ def center_text(surface, text_surf, y):
     x = (surface.get_width() - text_surf.get_width()) // 2
     surface.blit(text_surf, (x, y))
 
+# Головний цикл гри
 while гра_робить:
     дата.ii += 1
     if дата.ii % 50 == 0:
@@ -135,6 +161,11 @@ while гра_робить:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             гра_робить = False
+
+        # Обробка події зміни розміру вікна (тільки у віконному режимі)
+        if event.type == pygame.VIDEORESIZE and not дата.fullscreen:
+            # Перевстановлюємо дисплей із новим розміром вікна
+            Гра = set_display_mode(new_size=event.size)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -163,10 +194,14 @@ while гра_робить:
             if event.key == pygame.K_s and назва_кімнати == 'меню':
                 назва_кімнати = 'налаштування'
 
+            # Перемикання між режимами (F)
             if назва_кімнати == 'налаштування' and event.key == pygame.K_f:
                 new_state = not дата.fullscreen
+                дата.fullscreen = new_state
                 дата.update_and_save_settings(new_fullscreen=new_state)
-                set_display_mode()
+                # Якщо перемикаємося в fullscreen, новий розмір бере розміри з налаштувань
+                # Якщо віконний – використовуємо попередній або поточний розмір вікна
+                Гра = set_display_mode()
 
             if назва_кімнати == 'налаштування' and mouse_sens_active:
                 if event.key == pygame.K_RETURN:
@@ -242,57 +277,61 @@ while гра_робить:
 
     if назва_кімнати == 'меню':
         pygame.mouse.set_visible(True)
-        Гра.fill((0, 0, 0))
-        функції.зірки(Гра)
-        x_logo = (screen_w - Картинка_лого.get_width()) // 2
-        Гра.blit(Картинка_лого, (x_logo, screen_h // 4))
+        game_surface.fill((0, 0, 0))
+        функції.зірки(game_surface)
+        x_logo = (дата.Гра_ширина - Картинка_лого.get_width()) // 2
+        game_surface.blit(Картинка_лого, (x_logo, дата.Гра_висота // 4))
         if дата.блік:
             txt_start = шрифт_в.render("PRESS SPACE TO START", True, (255, 255, 255))
-            center_text(Гра, txt_start, screen_h // 2 + 60)
+            center_text(game_surface, txt_start, дата.Гра_висота // 2 + 60)
         інфо = шрифт_м.render("Press [S] for Settings", True, (255, 255, 255))
-        center_text(Гра, інфо, screen_h // 2 + 120)
+        center_text(game_surface, інфо, дата.Гра_висота // 2 + 120)
+        scaled_surface = pygame.transform.scale(game_surface, (screen_w, screen_h))
+        Гра.blit(scaled_surface, (0, 0))
         pygame.display.update()
 
     elif назва_кімнати == 'налаштування':
         pygame.mouse.set_visible(True)
-        Гра.fill((50, 50, 50))
+        game_surface.fill((50, 50, 50))
         заголовок = шрифт_в.render("Settings", True, (255, 255, 255))
-        center_text(Гра, заголовок, 30)
+        center_text(game_surface, заголовок, 30)
         label_sfx = шрифт_м.render("SFX Volume", True, (255, 255, 255))
-        Гра.blit(label_sfx, (50, 100))
-        slider_sfx.draw(Гра)
+        game_surface.blit(label_sfx, (50, 100))
+        slider_sfx.draw(game_surface)
         label_music = шрифт_м.render("Music Volume", True, (255, 255, 255))
-        Гра.blit(label_music, (50, 150))
-        slider_music.draw(Гра)
+        game_surface.blit(label_music, (50, 150))
+        slider_music.draw(game_surface)
         label_ms = шрифт_м.render("Mouse Sensitivity (0.1-2.0)", True, (255, 255, 255))
-        Гра.blit(label_ms, (50, 200))
-        pygame.draw.rect(Гра, (40, 40, 40), mouse_sens_input_box)
+        game_surface.blit(label_ms, (50, 200))
+        pygame.draw.rect(game_surface, (40, 40, 40), mouse_sens_input_box)
         text_ms = шрифт_м.render(mouse_sens_str if mouse_sens_active else str(round(дата.mouse_sens, 2)), True, (255, 255, 0))
-        Гра.blit(text_ms, (mouse_sens_input_box.x + 5, mouse_sens_input_box.y + 5))
+        game_surface.blit(text_ms, (mouse_sens_input_box.x + 5, mouse_sens_input_box.y + 5))
         if not дата.fullscreen:
             label_res = шрифт_м.render("Resolution (click to change)", True, (255, 255, 255))
-            Гра.blit(label_res, (50, 220))
-            pygame.draw.rect(Гра, (40, 40, 40), resolution_box)
+            game_surface.blit(label_res, (50, 220))
+            pygame.draw.rect(game_surface, (40, 40, 40), resolution_box)
             current_res_text = f"{resolution_options[resolution_index][0]} x {resolution_options[resolution_index][1]}"
             text_res = шрифт_м.render(current_res_text, True, (255, 255, 0))
-            Гра.blit(text_res, (resolution_box.x + 5, resolution_box.y + 5))
+            game_surface.blit(text_res, (resolution_box.x + 5, resolution_box.y + 5))
         label_fps = шрифт_м.render("FPS Limit (30-1000)", True, (255, 255, 255))
-        Гра.blit(label_fps, (50, 330))
-        pygame.draw.rect(Гра, (40, 40, 40), fps_limit_input_box)
+        game_surface.blit(label_fps, (50, 330))
+        pygame.draw.rect(game_surface, (40, 40, 40), fps_limit_input_box)
         text_fps = шрифт_м.render(fps_limit_str if fps_limit_active else str(дата.FPS), True, (255, 255, 0))
-        Гра.blit(text_fps, (fps_limit_input_box.x + 5, fps_limit_input_box.y + 5))
+        game_surface.blit(text_fps, (fps_limit_input_box.x + 5, fps_limit_input_box.y + 5))
         instr1 = шрифт_м.render("Press F to toggle Fullscreen", True, (200, 200, 200))
         instr2 = шрифт_м.render("Press ESC to return to Menu", True, (200, 200, 200))
-        Гра.blit(instr1, (50, 400))
-        Гра.blit(instr2, (50, 430))
+        game_surface.blit(instr1, (50, 400))
+        game_surface.blit(instr2, (50, 430))
+        scaled_surface = pygame.transform.scale(game_surface, (screen_w, screen_h))
+        Гра.blit(scaled_surface, (0, 0))
         pygame.display.update()
 
     elif назва_кімнати == 'гра':
         pygame.mouse.set_visible(False)
         if not дата.ініціалізація_гри:
-            pygame.mouse.set_pos([screen_w // 2, screen_h // 2])
+            pygame.mouse.set_pos([дата.Гра_ширина // 2, дата.Гра_висота // 2])
             дата.ініціалізація_гри = True
-        # --- Логіка пострілів та перевірка попадань ---
+        # --- Логіка гри (обробка пострілів, перевірка попадань, переміщення ворога тощо) ---
         if Миш_Кнопка_Ліва and Зброя.боєзапас > 0:
             if not Постріл:
                 if pygame.sprite.collide_mask(Ворог, курсор_з_прицiлом):
@@ -312,7 +351,6 @@ while гра_робить:
         if Миш_Кнопка_Ліва and not Постріл:
             if Зброя.боєзапас > 0:
                 Звук_постріл.play()
-                # Створюємо постріл із передачею положення зброї
                 Постріл = зброя.постріл(Зброя.rect)
                 Спрайти.add(Постріл)
                 дата.постріли += 1
@@ -323,7 +361,7 @@ while гра_робить:
         if not Миш_Кнопка_Ліва and Миш_Кнопка_Права and Зброя.боєзапас == 0:
             Звук_перезарядка.play()
             Зброя.боєзапас = дата.Максимальний_боєзапас
-        if (Ворог.rect.x > screen_w or Ворог.rect.y > screen_h or
+        if (Ворог.rect.x > дата.Гра_ширина or Ворог.rect.y > дата.Гра_висота or
             Ворог.rect.x < -Ворог.Спрайт_розмір or Ворог.rect.y < -Ворог.Спрайт_розмір):
             Ворог.kill()
             Ворог = ворог.путлер()
@@ -340,15 +378,17 @@ while гра_робить:
             дата.Ворог_k_ = False
         Спрайти.update()
         Спрайти_верх.update()
-        Гра.fill((0, 0, 0))
-        Гра.blit(фон, (0, 0))
-        функції.зірки(Гра)
-        функції.пулі(Гра, Зброя.боєзапас)
-        функції.статусбар(Гра, Картинка_статусбар, шрифт_м)
-        функції.убивство(Гра, шрифт_м, дата.Ворог_k[0],
+        game_surface.fill((0, 0, 0))
+        game_surface.blit(фон, (0, 0))
+        функції.зірки(game_surface)
+        функції.пулі(game_surface, Зброя.боєзапас)
+        функції.статусбар(game_surface, Картинка_статусбар, шрифт_м)
+        функції.убивство(game_surface, шрифт_м, дата.Ворог_k[0],
                          дата.Ворог_k[1], дата.Ворог_k[2], дата.Ворог_k[3])
-        Спрайти.draw(Гра)
-        Спрайти_верх.draw(Гра)
+        Спрайти.draw(game_surface)
+        Спрайти_верх.draw(game_surface)
+        scaled_surface = pygame.transform.scale(game_surface, (screen_w, screen_h))
+        Гра.blit(scaled_surface, (0, 0))
         pygame.display.update()
 
     elif назва_кімнати == 'вихід':
@@ -356,9 +396,11 @@ while гра_робить:
         if not дата.ініціалізація_гри:
             Ворог.kill()
             дата.ініціалізація_гри = True
-        Гра.fill((0, 0, 0))
-        функції.зірки(Гра)
-        функції.гра_завершенна(Гра, шрифт_в, шрифт_м)
+        game_surface.fill((0, 0, 0))
+        функції.зірки(game_surface)
+        функції.гра_завершенна(game_surface, шрифт_в, шрифт_м)
+        scaled_surface = pygame.transform.scale(game_surface, (screen_w, screen_h))
+        Гра.blit(scaled_surface, (0, 0))
         pygame.display.update()
 
 pygame.quit()
