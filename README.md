@@ -7,7 +7,7 @@
 
 ![изображение](https://github.com/makarasty/PutlerKiller-II/assets/71918286/e73e2d32-98fe-4d83-8863-dc9c36aab00a)
 
-# requirements
+# Requirements
 Для встановлення гри потрібно:
 - Встановити [git](https://git-scm.com/downloads),
 - Встановити [Python](https://www.python.org/downloads/),
@@ -15,3 +15,9 @@
 - `cd PutlerKiller-II`
 - `pip install -r requirements.txt`
 - `python main.py`
+
+# Compile
+`pyinstaller --noconfirm --onefile --windowed --icon ".\PutlerKiller-II\src\putler-3.ico" --name "PutlerKillerII" --add-data ".\PutlerKiller-II\налаштування.py;." --add-data ".\PutlerKiller-II\src;src/"  ".\PutlerKiller-II\main.py"`
+
+# Download
+[PutlerKillerII.exe](https://github.com/makarasty/PutlerKiller-II/releases/latest)
